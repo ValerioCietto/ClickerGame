@@ -114,10 +114,8 @@
         document.getElementById(`boost-cost-${i}`).textContent = b.cost;
         document.getElementById(`boost-count-${i}`).textContent = b.count;
       });
-      clickPowers.forEach((p,i) => {
-        document.getElementById(`power-cost-${i}`).textContent = p.cost;
-      });
     }
+
     clickBtnEl.addEventListener('click', ()=>{ money += clickPower; updateUI(); });
     tabButtons.forEach(btn=>btn.addEventListener('click',()=>{
       tabButtons.forEach(b=>b.classList.remove('active'));
@@ -125,39 +123,81 @@
       btn.classList.add('active');
       document.getElementById(btn.dataset.target).classList.add('active');
     }));
+
     autoUpgrades.forEach((u,i)=>{
       const btn=document.createElement('button');btn.id=`buy-auto-${i}`;
       btn.innerHTML=`Buy ${u.name} (+${u.power}/s) - Cost: <span id="auto-cost-${i}">${u.cost}</span><br>Owned: <span id="auto-count-${i}">${u.count}</span>`;
       btn.addEventListener('click',()=>{
-        if(money>=u.cost){money-=u.cost;u.count++;moneyPerSecond+=u.power;u.cost=Math.floor(u.baseCost*Math.pow(1.15,u.count));updateUI();}
-        else alert('Not enough money!');
+        if(money>=u.cost){
+          money-=u.cost;
+          u.count++;
+          moneyPerSecond+=u.power;
+          u.cost=Math.floor(u.baseCost*Math.pow(1.15,u.count));
+          updateUI();
+        }
       });autoDiv.appendChild(btn);
     });
+
     clickBoosters.forEach((b,i)=>{
       const btn=document.createElement('button');btn.id=`buy-boost-${i}`;
       btn.innerHTML=`Buy ${b.name} (+${b.power} click) - Cost: <span id="boost-cost-${i}">${b.cost}</span><br>Owned: <span id="boost-count-${i}">${b.count}</span>`;
       btn.addEventListener('click',()=>{
-        if(money>=b.cost){money-=b.cost;b.count++;clickPower+=b.power;b.cost=Math.floor(b.baseCost*Math.pow(1.15,b.count));updateUI();}
-        else alert('Not enough money!');
+        if(money>=b.cost){
+          money-=b.cost;
+          b.count++;
+          clickPower+=b.power;
+          b.cost=Math.floor(b.baseCost*Math.pow(1.15,b.count));
+          updateUI();
+        }
       });boostDiv.appendChild(btn);
     });
+
     clickPowers.forEach((p,i)=>{
       const btn=document.createElement('button');btn.id=`buy-power-${i}`;
       btn.innerHTML=`Unlock ${p.name} - Cost: <span id="power-cost-${i}">${p.cost}</span>`;
       btn.addEventListener('click',()=>{
-        if(money>=p.cost&&!p.unlocked){money-=p.cost;p.unlocked=true;btn.disabled=true;
-          if(p.id===1){ /* Mega Buy: no button create */ }
-          else if(p.id===3){ setInterval(()=>{autoUpgrades.forEach(u=>u.cost=Math.floor(u.cost*0.99));clickBoosters.forEach(b=>b.cost=Math.floor(b.cost*0.99));powerStatus.textContent='AUTO DISCOUNT APPLIED!';setTimeout(()=>powerStatus.textContent='',2000);updateUI();},10000); }
-          else{
-            const powerBtn=document.createElement('button');powerBtn.id=`power-button-${i}`;powerBtn.textContent=p.name;powerBtn.addEventListener('click',()=>activatePower(p.id));powersContainer.appendChild(powerBtn);
+        if(money>=p.cost&&!p.unlocked){
+          money-=p.cost;
+          p.unlocked=true;
+          btn.disabled=true;
+          if(p.id===1) {
+            // Mega Buy: no activation button
+          } else if(p.id===3) {
+            setInterval(()=>{
+              autoUpgrades.forEach(u=>u.cost=Math.floor(u.cost*0.99));
+              clickBoosters.forEach(b=>b.cost=Math.floor(b.cost*0.99));
+              powerStatus.textContent='AUTO DISCOUNT APPLIED!';
+              setTimeout(()=>powerStatus.textContent='',2000);
+              updateUI();
+            },10000);
+          } else {
+            const powerBtn=document.createElement('button');
+            powerBtn.id=`power-button-${i}`;
+            powerBtn.textContent=p.name;
+            powerBtn.addEventListener('click',()=>activatePower(p.id));
+            powersContainer.appendChild(powerBtn);
           }
-          updateUI();}
+          updateUI();
+        }
       });powersDiv.appendChild(btn);
     });
-    function activatePower(id){
-      if(id===0){powerStatus.textContent='CLICK FURY ACTIVE';const amt=clickPower;const iv=setInterval(()=>{money+=amt;updateUI();},100);setTimeout(()=>{clearInterval(iv);powerStatus.textContent='';},10000);}      
-      if(id===2){autoUpgrades.forEach(u=>u.cost=Math.floor(u.cost*0.99));clickBoosters.forEach(b=>b.cost=Math.floor(b.cost*0.99));powerStatus.textContent='DISCOUNT APPLIED!';setTimeout(()=>powerStatus.textContent='',2000);updateUI();}
+
+    function activatePower(id) {
+      if(id===0) {
+        powerStatus.textContent='CLICK FURY ACTIVE';
+        const amt=clickPower;
+        const iv=setInterval(()=>{money+=amt;updateUI();},100);
+        setTimeout(()=>{clearInterval(iv);powerStatus.textContent='';},10000);
+      }
+      if(id===2) {
+        autoUpgrades.forEach(u=>u.cost=Math.floor(u.cost*0.99));
+        clickBoosters.forEach(b=>b.cost=Math.floor(b.cost*0.99));
+        powerStatus.textContent='DISCOUNT APPLIED!';
+        setTimeout(()=>powerStatus.textContent='',2000);
+        updateUI();
+      }
     }
+
     setInterval(()=>{money+=moneyPerSecond;updateUI();},1000);
     updateUI();
   </script>
