@@ -7,7 +7,7 @@
   <style>
     body { margin: 0; font-family: Arial, sans-serif; }
     #container { display: flex; height: 100vh; }
-    #sidebar { width: 300px; background: #f5f5f5; padding: 0; box-shadow: 2px 0 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+    #sidebar { width: 300px; background: #f5f5f5; box-shadow: 2px 0 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
     .tabs { display: flex; }
     .tab-button { flex: 1; padding: 15px; background: #ddd; border: none; cursor: pointer; font-size: 1rem; }
     .tab-button.active { background: #f5f5f5; font-weight: bold; }
@@ -20,10 +20,29 @@
     #click-button { font-size: 1.2rem; padding: 15px 30px; cursor: pointer; }
     #powers-container button { margin: 10px; padding: 10px 20px; font-size: 1rem; }
     #power-status { margin-top: 10px; font-size: 1.2rem; color: red; font-weight:bold; }
+
+    /* Mobile layout: main above, sidebar below */
+    @media (max-width: 600px) {
+      #container { flex-direction: column; height: auto; }
+      #main { order: 1; width: 100%; padding: 20px; }
+      #sidebar { order: 2; width: 100%; height: auto; }
+      .tabs { flex-wrap: wrap; }
+      .tab-content { max-height: 300px; }
+      #money-display, #click-button { width: 100%; text-align: center; }
+      #click-button { margin-bottom: 20px; }
+    }
   </style>
 </head>
 <body>
   <div id="container">
+    <div id="main">
+      <div id="money-display">
+        Money: <span id="money">0</span> (<span id="money-per-second">0</span>/s)
+      </div>
+      <button id="click-button">+1</button>
+      <div id="powers-container"></div>
+      <div id="power-status"></div>
+    </div>
     <div id="sidebar">
       <div class="tabs">
         <button class="tab-button active" data-target="auto-tab">Auto Upgrades</button>
@@ -33,14 +52,6 @@
       <section id="auto-tab" class="tab-content active"></section>
       <section id="boost-tab" class="tab-content"></section>
       <section id="powers-tab" class="tab-content"></section>
-    </div>
-    <div id="main">
-      <div id="money-display">
-        Money: <span id="money">0</span> (<span id="money-per-second">0</span>/s)
-      </div>
-      <button id="click-button">+1</button>
-      <div id="powers-container"></div>
-      <div id="power-status"></div>
     </div>
   </div>
 
@@ -89,7 +100,7 @@
     const autoDiv = document.getElementById('auto-tab');
     const boostDiv = document.getElementById('boost-tab');
     const powersDiv = document.getElementById('powers-tab');
-    const clickBtn = document.getElementById('click-button');
+    const clickBtnEl = document.getElementById('click-button');
     const powersContainer = document.getElementById('powers-container');
     const powerStatus = document.getElementById('power-status');
     const tabButtons = document.querySelectorAll('.tab-button');
@@ -98,7 +109,7 @@
     function updateUI() {
       moneyEl.textContent = money;
       mpsEl.textContent = moneyPerSecond;
-      clickBtn.textContent = `+${clickPower}`;
+      clickBtnEl.textContent = `+${clickPower}`;
       autoUpgrades.forEach((u, i) => {
         document.getElementById(`auto-cost-${i}`).textContent = u.cost;
         document.getElementById(`auto-count-${i}`).textContent = u.count;
@@ -112,12 +123,11 @@
       });
     }
 
-    clickBtn.addEventListener('click', () => {
+    clickBtnEl.addEventListener('click', () => {
       money += clickPower;
       updateUI();
     });
 
-    // Tab switching logic
     tabButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         tabButtons.forEach(b => b.classList.remove('active'));
@@ -127,7 +137,6 @@
       });
     });
 
-    // Bulk purchase helper
     function bulkPurchase(item, isAuto) {
       while (money >= item.cost) {
         money -= item.cost;
@@ -138,7 +147,6 @@
       }
     }
 
-    // Create auto upgrade buttons
     autoUpgrades.forEach((u, i) => {
       const btn = document.createElement('button');
       btn.id = `buy-auto-${i}`;
@@ -156,7 +164,6 @@
       autoDiv.appendChild(btn);
     });
 
-    // Create click booster buttons
     clickBoosters.forEach((b, i) => {
       const btn = document.createElement('button');
       btn.id = `buy-boost-${i}`;
@@ -174,7 +181,6 @@
       boostDiv.appendChild(btn);
     });
 
-    // Create click power upgrade buttons
     clickPowers.forEach((p, i) => {
       const btn = document.createElement('button');
       btn.id = `buy-power-${i}`;
@@ -184,7 +190,6 @@
           money -= p.cost;
           p.unlocked = true;
           btn.disabled = true;
-          // For Auto Click Inflation, start automatic effect
           if (i === 3) {
             setInterval(() => {
               autoUpgrades.forEach(u => { u.cost = Math.floor(u.cost * 0.99); });
@@ -206,7 +211,6 @@
       powersDiv.appendChild(btn);
     });
 
-    // Power activation logic
     function activatePower(index) {
       if (index === 0 && clickPowers[0].unlocked) {
         powerStatus.textContent = 'CLICK FURY ACTIVE';
@@ -229,7 +233,6 @@
       }
     }
 
-    // Auto-increment money every second
     setInterval(() => {
       money += moneyPerSecond;
       updateUI();
