@@ -17,11 +17,15 @@
     #main { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     #money-display { font-size: 2rem; margin-bottom: 10px; }
     #money-display span { font-weight: bold; }
-    #click-button { font-size: 1.2rem; padding: 15px 30px; cursor: pointer; }
+    #click-button {
+      font-size: 1.2rem;
+      padding: 15px 30px;
+      cursor: pointer;
+      width: 200px;
+      max-width: 80%;
+    }
     #powers-container button { margin: 10px; padding: 10px 20px; font-size: 1rem; }
     #power-status { margin-top: 10px; font-size: 1.2rem; color: red; font-weight:bold; }
-
-    /* Mobile layout: main above, sidebar below */
     @media (max-width: 600px) {
       #container { flex-direction: column; height: auto; }
       #main { order: 1; width: 100%; padding: 20px; }
@@ -36,9 +40,7 @@
 <body>
   <div id="container">
     <div id="main">
-      <div id="money-display">
-        Money: <span id="money">0</span> (<span id="money-per-second">0</span>/s)
-      </div>
+      <div id="money-display">Money: <span id="money">0</span> (<span id="money-per-second">0</span>/s)</div>
       <button id="click-button">+1</button>
       <div id="powers-container"></div>
       <div id="power-status"></div>
@@ -56,10 +58,7 @@
   </div>
 
   <script>
-    let money = 0;
-    let moneyPerSecond = 0;
-    let clickPower = 1;
-
+    let money = 0, moneyPerSecond = 0, clickPower = 1;
     const autoUpgrades = [
       { name: "Button Presser", baseCost: 10, cost: 10, power: 1, count: 0 },
       { name: "Auto Clicker", baseCost: 100, cost: 100, power: 5, count: 0 },
@@ -73,7 +72,6 @@
       { name: "Divine Clicker", baseCost: 1000000000, cost: 1000000000, power: 250000, count: 0 },
       { name: "Ultimate Click Engine", baseCost: 10000000000, cost: 10000000000, power: 1000000, count: 0 }
     ];
-
     const clickBoosters = [
       { name: "Finger Glove", baseCost: 10, cost: 10, power: 1, count: 0 },
       { name: "Double Tap", baseCost: 100, cost: 100, power: 5, count: 0 },
@@ -87,14 +85,12 @@
       { name: "Divine Digit", baseCost: 1000000000, cost: 1000000000, power: 250000, count: 0 },
       { name: "Ultimate Click Module", baseCost: 10000000000, cost: 10000000000, power: 1000000, count: 0 }
     ];
-
     const clickPowers = [
-      { name: "Click Fury", baseCost: 10, cost: 10, unlocked: false },
-      { name: "Mega Buy", baseCost: 500, cost: 500, unlocked: false },
-      { name: "Click Inflation", baseCost: 10000, cost: 10000, unlocked: false },
-      { name: "Auto Click Inflation", baseCost: 50000, cost: 50000, unlocked: false }
+      { id: 0, name: "Click Fury", baseCost: 10, cost: 10, unlocked: false },
+      { id: 1, name: "Mega Buy", baseCost: 500, cost: 500, unlocked: false },
+      { id: 2, name: "Apply 1% discount button", baseCost: 10000, cost: 10000, unlocked: false },
+      { id: 3, name: "auto apply discount 1%/10s", baseCost: 50000, cost: 50000, unlocked: false }
     ];
-
     const moneyEl = document.getElementById('money');
     const mpsEl = document.getElementById('money-per-second');
     const autoDiv = document.getElementById('auto-tab');
@@ -110,134 +106,59 @@
       moneyEl.textContent = money;
       mpsEl.textContent = moneyPerSecond;
       clickBtnEl.textContent = `+${clickPower}`;
-      autoUpgrades.forEach((u, i) => {
+      autoUpgrades.forEach((u,i) => {
         document.getElementById(`auto-cost-${i}`).textContent = u.cost;
         document.getElementById(`auto-count-${i}`).textContent = u.count;
       });
-      clickBoosters.forEach((b, i) => {
+      clickBoosters.forEach((b,i) => {
         document.getElementById(`boost-cost-${i}`).textContent = b.cost;
         document.getElementById(`boost-count-${i}`).textContent = b.count;
       });
-      clickPowers.forEach((p, i) => {
+      clickPowers.forEach((p,i) => {
         document.getElementById(`power-cost-${i}`).textContent = p.cost;
       });
     }
-
-    clickBtnEl.addEventListener('click', () => {
-      money += clickPower;
-      updateUI();
+    clickBtnEl.addEventListener('click', ()=>{ money += clickPower; updateUI(); });
+    tabButtons.forEach(btn=>btn.addEventListener('click',()=>{
+      tabButtons.forEach(b=>b.classList.remove('active'));
+      tabContents.forEach(c=>c.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.target).classList.add('active');
+    }));
+    autoUpgrades.forEach((u,i)=>{
+      const btn=document.createElement('button');btn.id=`buy-auto-${i}`;
+      btn.innerHTML=`Buy ${u.name} (+${u.power}/s) - Cost: <span id="auto-cost-${i}">${u.cost}</span><br>Owned: <span id="auto-count-${i}">${u.count}</span>`;
+      btn.addEventListener('click',()=>{
+        if(money>=u.cost){money-=u.cost;u.count++;moneyPerSecond+=u.power;u.cost=Math.floor(u.baseCost*Math.pow(1.15,u.count));updateUI();}
+        else alert('Not enough money!');
+      });autoDiv.appendChild(btn);
     });
-
-    tabButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        tabButtons.forEach(b => b.classList.remove('active'));
-        tabContents.forEach(c => c.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById(btn.dataset.target).classList.add('active');
-      });
+    clickBoosters.forEach((b,i)=>{
+      const btn=document.createElement('button');btn.id=`buy-boost-${i}`;
+      btn.innerHTML=`Buy ${b.name} (+${b.power} click) - Cost: <span id="boost-cost-${i}">${b.cost}</span><br>Owned: <span id="boost-count-${i}">${b.count}</span>`;
+      btn.addEventListener('click',()=>{
+        if(money>=b.cost){money-=b.cost;b.count++;clickPower+=b.power;b.cost=Math.floor(b.baseCost*Math.pow(1.15,b.count));updateUI();}
+        else alert('Not enough money!');
+      });boostDiv.appendChild(btn);
     });
-
-    function bulkPurchase(item, isAuto) {
-      while (money >= item.cost) {
-        money -= item.cost;
-        item.count++;
-        if (isAuto) moneyPerSecond += item.power;
-        else clickPower += item.power;
-        item.cost = Math.floor(item.baseCost * Math.pow(1.15, item.count));
-      }
-    }
-
-    autoUpgrades.forEach((u, i) => {
-      const btn = document.createElement('button');
-      btn.id = `buy-auto-${i}`;
-      btn.innerHTML = `Buy ${u.name} (+${u.power}/s) - Cost: <span id="auto-cost-${i}">${u.cost}</span><br>Owned: <span id="auto-count-${i}">${u.count}</span>`;
-      btn.addEventListener('click', () => {
-        if (clickPowers[1].unlocked) bulkPurchase(u, true);
-        else if (money >= u.cost) {
-          money -= u.cost;
-          u.count++;
-          moneyPerSecond += u.power;
-          u.cost = Math.floor(u.baseCost * Math.pow(1.15, u.count));
-        }
-        updateUI();
-      });
-      autoDiv.appendChild(btn);
-    });
-
-    clickBoosters.forEach((b, i) => {
-      const btn = document.createElement('button');
-      btn.id = `buy-boost-${i}`;
-      btn.innerHTML = `Buy ${b.name} (+${b.power} click) - Cost: <span id="boost-cost-${i}">${b.cost}</span><br>Owned: <span id="boost-count-${i}">${b.count}</span>`;
-      btn.addEventListener('click', () => {
-        if (clickPowers[1].unlocked) bulkPurchase(b, false);
-        else if (money >= b.cost) {
-          money -= b.cost;
-          b.count++;
-          clickPower += b.power;
-          b.cost = Math.floor(b.baseCost * Math.pow(1.15, b.count));
-        }
-        updateUI();
-      });
-      boostDiv.appendChild(btn);
-    });
-
-    clickPowers.forEach((p, i) => {
-      const btn = document.createElement('button');
-      btn.id = `buy-power-${i}`;
-      btn.innerHTML = `Unlock ${p.name} - Cost: <span id="power-cost-${i}">${p.cost}</span>`;
-      btn.addEventListener('click', () => {
-        if (money >= p.cost && !p.unlocked) {
-          money -= p.cost;
-          p.unlocked = true;
-          btn.disabled = true;
-          if (i === 3) {
-            setInterval(() => {
-              autoUpgrades.forEach(u => { u.cost = Math.floor(u.cost * 0.99); });
-              clickBoosters.forEach(b => { b.cost = Math.floor(b.cost * 0.99); });
-              powerStatus.textContent = 'AUTO INFLATION APPLIED!';
-              setTimeout(() => { powerStatus.textContent = ''; }, 2000);
-              updateUI();
-            }, 10000);
-          } else {
-            const powerBtn = document.createElement('button');
-            powerBtn.id = `power-button-${i}`;
-            powerBtn.textContent = p.name;
-            powerBtn.addEventListener('click', () => activatePower(i));
-            powersContainer.appendChild(powerBtn);
+    clickPowers.forEach((p,i)=>{
+      const btn=document.createElement('button');btn.id=`buy-power-${i}`;
+      btn.innerHTML=`Unlock ${p.name} - Cost: <span id="power-cost-${i}">${p.cost}</span>`;
+      btn.addEventListener('click',()=>{
+        if(money>=p.cost&&!p.unlocked){money-=p.cost;p.unlocked=true;btn.disabled=true;
+          if(p.id===1){ /* Mega Buy: no button create */ }
+          else if(p.id===3){ setInterval(()=>{autoUpgrades.forEach(u=>u.cost=Math.floor(u.cost*0.99));clickBoosters.forEach(b=>b.cost=Math.floor(b.cost*0.99));powerStatus.textContent='AUTO DISCOUNT APPLIED!';setTimeout(()=>powerStatus.textContent='',2000);updateUI();},10000); }
+          else{
+            const powerBtn=document.createElement('button');powerBtn.id=`power-button-${i}`;powerBtn.textContent=p.name;powerBtn.addEventListener('click',()=>activatePower(p.id));powersContainer.appendChild(powerBtn);
           }
-          updateUI();
-        } else alert('Not enough money!');
-      });
-      powersDiv.appendChild(btn);
+          updateUI();}
+      });powersDiv.appendChild(btn);
     });
-
-    function activatePower(index) {
-      if (index === 0 && clickPowers[0].unlocked) {
-        powerStatus.textContent = 'CLICK FURY ACTIVE';
-        const furyAmount = clickPower;
-        const furyInterval = setInterval(() => {
-          money += furyAmount;
-          updateUI();
-        }, 100);
-        setTimeout(() => {
-          clearInterval(furyInterval);
-          powerStatus.textContent = '';
-        }, 10000);
-      }
-      if (index === 2 && clickPowers[2].unlocked) {
-        autoUpgrades.forEach(u => { u.cost = Math.floor(u.cost * 0.99); });
-        clickBoosters.forEach(b => { b.cost = Math.floor(b.cost * 0.99); });
-        powerStatus.textContent = 'INFLATION APPLIED!';
-        setTimeout(() => { powerStatus.textContent = ''; }, 2000);
-        updateUI();
-      }
+    function activatePower(id){
+      if(id===0){powerStatus.textContent='CLICK FURY ACTIVE';const amt=clickPower;const iv=setInterval(()=>{money+=amt;updateUI();},100);setTimeout(()=>{clearInterval(iv);powerStatus.textContent='';},10000);}      
+      if(id===2){autoUpgrades.forEach(u=>u.cost=Math.floor(u.cost*0.99));clickBoosters.forEach(b=>b.cost=Math.floor(b.cost*0.99));powerStatus.textContent='DISCOUNT APPLIED!';setTimeout(()=>powerStatus.textContent='',2000);updateUI();}
     }
-
-    setInterval(() => {
-      money += moneyPerSecond;
-      updateUI();
-    }, 1000);
-
+    setInterval(()=>{money+=moneyPerSecond;updateUI();},1000);
     updateUI();
   </script>
 </body>
